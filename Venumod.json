@@ -1,0 +1,22 @@
+{
+	"id": "Venumod",
+	"name": "Venumod",
+	"display_name": "Venumod",
+	"author": [
+		"Judoriu"
+	],
+	"description": "Ptit mod",
+	"prefix": "venu",
+	"main_file": "core.lua",
+	"priority": 0,
+	"badge_colour": "7a2eb6",
+	"badge_text_colour": "FFFFFF",
+	"version": "0.1",
+	"dependencies": [
+		"Lovely (>=0.7)",
+		"Balatro (>=1.0.1o)",
+        "Steamodded"
+	],
+	"conflicts": [
+	]
+}
