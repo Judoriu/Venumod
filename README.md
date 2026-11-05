@@ -19,4 +19,4 @@ taureau :
 
 lvl 9
 tigre funéraire :
-territoire
+territoire : N1,10 x effect des bêtes
