@@ -25,9 +25,14 @@ SMODS.Joker {
             "{X:mult,C:white}X#1#{} Mult",
             "",
             "Each black card played gives",
-            "{X:blue,C:white}+#2#{} Chips for every other Joker"
+            "{C:blue}+#2#{} Chips for every other Joker",
+            "",
+            "{C:purple}Domain Expansion:{}",
+            "{X:mult,C:white}X#3#{} Mult during the territory"
         }
     },
+
+    venumod_jjk = true,
 
     config = {
         extra = {
@@ -48,14 +53,36 @@ SMODS.Joker {
         return {
             vars = {
                 card.ability.extra.xmult,
-                card.ability.extra.chips
+                card.ability.extra.chips,
+                5
             }
         }
     end,
 
+    venumod_domain_bonus = function(self, joker, context)
+        return {
+            Xmult = 5,
+            message = "UNLIMITED VOID!",
+            colour = G.C.PURPLE
+        }
+    end,
     
     calculate = function(self, card, context)
+        if context.before then
+            Venumod.apply_domain_seal(context)
+        end
+
+        if context.post_trigger then
+            return Venumod.domain_post_trigger(card, context)
+        end
+
+        if context.blind_defeated then
+            Venumod.update_domain_duration(card, context)
+        end
+
         if context.joker_main then
+            Venumod.add_jjk_energy(card, 50)
+
             local red = 0
             local black = 0
 
@@ -80,7 +107,7 @@ SMODS.Joker {
                 local current_chips = hand_chips
 
                 local hollow_purple =
-                    (current_mult ^ 2) + (current_chips ^ 2)
+                    (current_mult ^ 2) + (current_chips ^ 2) * 5
 
                 return {
                     mult = hollow_purple,
@@ -105,6 +132,84 @@ SMODS.Joker {
                     colour = G.C.BLUE
                 }
             end
+        end
+    end
+}
+
+SMODS.Atlas {
+    key = "tempete",
+    path = "tempete.png",
+    px = 71,
+    py = 95,
+}
+
+SMODS.Joker {
+    key = "tempete",
+
+    loc_txt = {
+        name = "Tempête émotionnelle",
+        text = {
+            "Add current {C:mult}Mult{} and {C:chips}Chips{}",
+            "Randomly separate the total",
+            "Add a random bonus between {C:attention}0 and 100000{}",
+            "to both new values"
+        }
+    },
+
+    atlas = "tempete",
+    rarity = 4,
+    cost = 8,
+    pos = {x = 0, y = 0},
+
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+
+    calculate = function(self, card, context)
+
+        if context.joker_main then
+
+            local current_mult = mult
+            local current_chips = hand_chips
+
+            local total = current_mult + current_chips
+
+            -- Random separation
+            local new_mult = pseudorandom(
+                "tempete_mult",
+                0,
+                math.floor(total)
+            )
+
+            local new_chips = total - new_mult
+
+            -- Random bonuses
+            local bonus_mult = pseudorandom(
+                "tempete_bonus_mult",
+                0,
+                100000
+            )
+
+            local bonus_chips = pseudorandom(
+                "tempete_bonus_chips",
+                0,
+                100000
+            )
+
+            -- Add bonuses
+            new_mult = new_mult + bonus_mult
+            new_chips = new_chips + bonus_chips
+
+            -- Calculate differences
+            local mult_difference = new_mult - current_mult
+            local chips_difference = new_chips - current_chips
+
+            return {
+                mult = mult_difference,
+                chips = chips_difference,
+                message = "Tempête !",
+                colour = G.C.PURPLE
+            }
         end
     end
 }

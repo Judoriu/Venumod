@@ -22,13 +22,12 @@ SMODS.Consumable {
     loc_txt = {
         name = "Absolute Guenole",
         text = {
-            "Randomize every {C:purple}Joker{}",
-            "Randomize every {C:attention}playing card{}",
-            "Randomize every {C:planet}hand level{}",
-            "{C:red}Chaos is inevitable{}"
+            "{E:1,C:red}Chaos is inevitable{}"
         }
     },
 
+    unlocked = true,
+    discovered = true,
     atlas = "random",
     pos = {x = 0, y = 0},
     cost = 10,
@@ -137,6 +136,8 @@ SMODS.Consumable{
         }
     },
 
+    unlocked = true,
+    discovered = true,
     atlas= "lep",
     pos= {x=0,y=0},
     cost= 10,
@@ -177,6 +178,7 @@ SMODS.Consumable{
 }
 
 
+
 SMODS.Atlas {
     key = "cola",
     path = "eliot.png",
@@ -191,14 +193,33 @@ SMODS.Consumable {
     loc_txt = {
         name = "Eliot",
         text = {
-            "Transform all cards",
-            "in your hand into {C:attention}Queens{}"
+            "Transforme toutes les cartes",
+            "de ta main en {C:attention}Dames{}",
+            "Gagne {C:purple}20 énergie{} par utilisation",
+            "À {C:purple}100 énergie{} : transforme",
+            "tout ton deck en {C:attention}Dames{}"
         }
     },
 
+    unlocked = true,
+    discovered = true,
+    venumod_jjk = true,
     atlas = "cola",
     pos = {x = 0, y = 0},
     cost = 6,
+
+    -- Affiche l'énergie actuelle dans la description
+    loc_vars = function(self, info_queue, card)
+        local energy = 0
+
+        if G.GAME and G.GAME.venumod_eliot then
+            energy = G.GAME.venumod_eliot.energy or 0
+        end
+
+        return {
+            vars = {energy}
+        }
+    end,
 
     can_use = function(self, card)
         return G.hand and #G.hand.cards > 0
@@ -206,7 +227,55 @@ SMODS.Consumable {
 
     use = function(self, card, area, copier)
 
-        for _, playing_card in ipairs(G.hand.cards) do
+        -- Initialise l'énergie d'Eliot
+        G.GAME.venumod_eliot =
+            G.GAME.venumod_eliot or {
+                energy = 0
+            }
+
+        local data = G.GAME.venumod_eliot
+
+        -- Ajoute 20 énergie
+        data.energy = math.min(100, data.energy + 20)
+
+        local territory = data.energy >= 100
+
+        local cards_to_transform = {}
+
+        if territory then
+
+            -- EXTENSION DU TERRITOIRE
+            -- Récupère toutes les cartes du deck
+            for _, playing_card in ipairs(G.playing_cards) do
+                cards_to_transform[#cards_to_transform + 1] =
+                    playing_card
+            end
+
+            attention_text({
+                text = "EXTENSION DU TERRITOIRE !",
+                scale = 1.4,
+                hold = 2,
+                backdrop_colour = G.C.PURPLE,
+                align = "cm",
+                major = G.play,
+                offset = {x = 0, y = -1}
+            })
+
+            -- Réinitialise la jauge
+            data.energy = 0
+
+        else
+
+            -- Effet normal : uniquement la main
+            for _, playing_card in ipairs(G.hand.cards) do
+                cards_to_transform[#cards_to_transform + 1] =
+                    playing_card
+            end
+
+        end
+
+        -- Transformation des cartes en Dames
+        for _, playing_card in ipairs(cards_to_transform) do
 
             local suit_prefix = string.sub(
                 playing_card.base.suit,
@@ -223,10 +292,142 @@ SMODS.Consumable {
 
         end
 
+        -- Message selon l'effet utilisé
+        if territory then
+            card_eval_status_text(
+                card,
+                'extra',
+                nil,
+                nil,
+                nil,
+                {
+                    message = "WORLD IS HAREM!",
+                    colour = G.C.PURPLE
+                }
+            )
+        else
+            card_eval_status_text(
+                card,
+                'extra',
+                nil,
+                nil,
+                nil,
+                {
+                    message = "+" .. 20 .. " Énergie",
+                    colour = G.C.PURPLE
+                }
+            )
+        end
+
     end
 }
 
 
+SMODS.Atlas {
+    key = "spooderman",
+    path = "spooderman.png",
+    px = 71,
+    py = 95,
+}
+
+SMODS.Consumable {
+    key = "spooderman",
+    set = "Tarot",
+
+    loc_txt = {
+        name = "Spooderman",
+        text = {
+            "{C:green}1 in 15{} chance:",
+            "{C:green}Good effect:{} Add {C:red}Red Seals{}",
+            "to {C:attention}3 random cards{}",
+            "{C:red}Bad effect:{} Destroy {C:attention}2 cards{}"
+        }
+    },
+
+    atlas = "spooderman",
+    pos = {x = 0, y = 0},
+    cost = 6,
+
+    can_use = function(self, card)
+        return G.playing_cards and #G.playing_cards >= 2
+    end,
+
+    use = function(self, card, area, copier)
+        local success = pseudorandom(
+            pseudoseed("spooderman"),
+            1,
+            15
+        ) == 1
+
+        if success then
+            -- GOOD EFFECT
+            local available_cards = {}
+
+            for _, playing_card in ipairs(G.playing_cards) do
+                if not playing_card.seal then
+                    available_cards[#available_cards + 1] = playing_card
+                end
+            end
+
+            for i = 1, math.min(3, #available_cards) do
+                local selected = pseudorandom_element(
+                    available_cards,
+                    pseudoseed("spooderman_seal_" .. i)
+                )
+
+                if selected then
+                    selected:set_seal("Red", true, true)
+                    selected:juice_up(0.5, 0.5)
+
+                    for j, v in ipairs(available_cards) do
+                        if v == selected then
+                            table.remove(available_cards, j)
+                            break
+                        end
+                    end
+                end
+            end
+
+            card_eval_status_text(
+                card,
+                "extra",
+                nil,
+                nil,
+                nil,
+                {message = "SPIDER LUCK!", colour = G.C.RED}
+            )
+
+        else
+            -- BAD EFFECT
+            local destroyed_cards = {}
+
+            for i = 1, 2 do
+                if #G.playing_cards > 0 then
+                    local selected = pseudorandom_element(
+                        G.playing_cards,
+                        pseudoseed("spooderman_destroy_" .. i)
+                    )
+
+                    if selected then
+                        destroyed_cards[#destroyed_cards + 1] = selected
+                        for j, v in ipairs(G.playing_cards) do
+                            if v == selected then
+                                table.remove(G.playing_cards, j)
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+
+            SMODS.destroy_cards(destroyed_cards, {
+                bypass_eternal = true
+            })
+        end
+
+        play_sound("tarot1")
+    end
+}
 
 ----------------------------------------------------------
 ----------- MOD CODE END ----------------------------------

@@ -60,5 +60,66 @@ SMODS.Joker{
 end
 }
 
+SMODS.Atlas {
+    key = "carte_trefle",
+    path = "carte_trefle.png",
+    px = 71,
+    py = 95,
+}
+
+SMODS.Joker {
+    key = "carte_trefle",
+
+    loc_txt = {
+        name = "Card of Spades",
+        text = {
+            "If a {C:attention}4 of Clubs{} scores:",
+            "{X:mult,C:white}X4{} Mult and {X:chips,C:white}X4{} Chips",
+            "If a {C:attention}5 of Clubs{} scores:",
+            "{X:mult,C:white}X2{} Mult and {C:chips}halve{} Chips"
+        }
+    },
+
+    atlas = "carte_trefle",
+    pos = {x = 0, y = 0},
+    rarity = 1,
+    cost = 5,
+
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = true,
+
+    calculate = function(self, card, context)
+        if context.individual
+        and context.cardarea == G.play
+        and context.other_card then
+
+            local played_card = context.other_card
+
+            if played_card:is_suit("Clubs") then
+
+                -- 4 OF CLUBS
+                if played_card:get_id() == 4 then
+                    return {
+                        Xmult = 4,
+                        x_chips = 4,
+                        message = "X4 !",
+                        colour = G.C.GREEN
+                    }
+
+                -- 5 OF CLUBS
+                elseif played_card:get_id() == 5 then
+                    return {
+                        Xmult = 2,
+                        x_chips = 0.5,
+                        message = "X2 / 2",
+                        colour = G.C.GREEN
+                    }
+                end
+            end
+        end
+    end
+}
+
 ----------------------------------------------------------
 ----------- MOD CODE END ----------------------------------

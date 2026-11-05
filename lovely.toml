@@ -1,0 +1,74 @@
+
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "self.children.area_uibox:draw()"
+position = "after"
+payload = '''
+if self == G.jokers and Venumod then
+    if Venumod.draw_energy_ui then
+        Venumod.draw_energy_ui()
+    end
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''
+    if not G.debug_UI_toggle then 
+'''
+position = "before"
+payload = '''
+if Venumod and Venumod.draw_domain_background then
+    Venumod.draw_domain_background()
+end
+
+-- Cinématique de Mahoraga
+if Venumod
+and Venumod.MahoragaIntro
+and Venumod.MahoragaIntro.active then
+    Venumod.MahoragaIntro.draw()
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "function Game:update(dt)"
+position = "after"
+payload = '''
+if Venumod and Venumod.debug and Venumod.debug.update then
+    Venumod.debug.update()
+end
+
+-- Mise à jour de la cinématique de Mahoraga
+if Venumod
+and Venumod.MahoragaIntro
+and Venumod.MahoragaIntro.active then
+    Venumod.MahoragaIntro.update(dt)
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "draw_card(G.play,G.discard, it*100/play_count,'down', false, v)"
+position = "at"
+payload = '''
+if Venumod and Venumod.has_megumi_frog
+and Venumod.has_megumi_frog() then
+    draw_card(G.play,G.deck, it*100/play_count,'down', false, v)
+else
+    draw_card(G.play,G.discard, it*100/play_count,'down', false, v)
+end
+'''
+match_indent = true
