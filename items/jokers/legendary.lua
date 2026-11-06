@@ -54,14 +54,14 @@ SMODS.Joker {
             vars = {
                 card.ability.extra.xmult,
                 card.ability.extra.chips,
-                5
+                500^2
             }
         }
     end,
 
     venumod_domain_bonus = function(self, joker, context)
         return {
-            Xmult = 5,
+            Xmult = 500^2,
             message = "UNLIMITED VOID!",
             colour = G.C.PURPLE
         }
@@ -81,7 +81,7 @@ SMODS.Joker {
         end
 
         if context.joker_main then
-            Venumod.add_jjk_energy(card, 50)
+            Venumod.add_jjk_energy(card, 5)
 
             local red = 0
             local black = 0

@@ -383,7 +383,7 @@ end
         and not context.blueprint
         and not context.retrigger_joker then
 
-            local leveled_up = megumi_add_xp(card, 300)
+            local leveled_up = megumi_add_xp(card, 10)
 
             if leveled_up then
                 card_eval_status_text(
@@ -564,7 +564,7 @@ end
 
                 local was_active = jjk_data and jjk_data.domain_active
 
-                Venumod.add_jjk_energy(card, 50)
+                Venumod.add_jjk_energy(card, 10)
 
                 jjk_data = Venumod.get_jjk_data(card)
 
